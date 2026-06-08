@@ -514,6 +514,60 @@
       "hints": {
         "linkLabel": "If display text is empty, the domain or full URL will be shown automatically. Only http:// and https:// links are supported."
       },
+      "aiWriter": {
+        "entry": "AI Write",
+        "title": "AI Project Writer",
+        "description": "Select a local project directory or enter a GitHub repository URL. AI will analyze the project and draft a resume-ready project experience.",
+        "tabs": {
+          "local": "Local Folder",
+          "github": "GitHub"
+        },
+        "local": {
+          "directory": "project folder",
+          "empty": "No local project folder selected",
+          "selected": "Selected {name}, sampled {count} files",
+          "hint": "Only README, config files, and common source text are read. node_modules, dist, .git, and similar folders are skipped.",
+          "select": "Choose Folder"
+        },
+        "github": {
+          "label": "GitHub repository URL",
+          "placeholder": "https://github.com/owner/repo",
+          "hint": "Public repositories are supported, including /tree/branch/path subdirectory URLs."
+        },
+        "targetRole": {
+          "label": "Target Role",
+          "placeholder": "e.g. QA Engineer, Frontend Engineer, Java Backend Engineer",
+          "hint": "AI will tune the project experience for this role. For QA roles, it will emphasize test design, automation, debugging, and quality assurance."
+        },
+        "instructions": {
+          "label": "Extra instructions",
+          "placeholder": "For example: highlight frontend engineering, emphasize performance work, target Java backend roles..."
+        },
+        "preview": {
+          "title": "Generated Preview",
+          "empty": "After generation, the AI draft will appear here.",
+          "generating": "AI is analyzing the project...",
+          "untitled": "Untitled Project",
+          "items": "items"
+        },
+        "actions": {
+          "cancel": "Cancel",
+          "generate": "Generate Project",
+          "regenerate": "Regenerate",
+          "apply": "Apply to Project"
+        },
+        "toast": {
+          "configRequired": "Please configure an AI provider first",
+          "selectLocal": "Please select a local project folder first",
+          "githubRequired": "Please enter a GitHub repository URL",
+          "noLocalFiles": "No analyzable text files were found",
+          "localLoaded": "Loaded {count} project files",
+          "localFailed": "Failed to read local folder",
+          "generateFailed": "Failed to generate project experience",
+          "generated": "Project experience generated",
+          "applied": "Applied to current project"
+        }
+      },
       "buttons": {
         "edit": "Edit",
         "save": "Save",

@@ -471,6 +471,60 @@
       "hints": {
         "linkLabel": "显示文字留空时，将自动显示域名或完整链接。链接仅支持 http:// 或 https:// 链接。"
       },
+      "aiWriter": {
+        "entry": "AI 帮写",
+        "title": "AI 帮写项目经历",
+        "description": "选择本地项目目录或输入 GitHub 仓库地址，AI 会分析项目后生成可直接放入简历的项目经历。",
+        "tabs": {
+          "local": "本地目录",
+          "github": "GitHub"
+        },
+        "local": {
+          "directory": "项目目录",
+          "empty": "尚未选择本地项目目录",
+          "selected": "已选择 {name}，采样 {count} 个文件",
+          "hint": "仅会读取 README、配置文件和常见源码文本；会自动跳过 node_modules、dist、.git 等目录。",
+          "select": "选择目录"
+        },
+        "github": {
+          "label": "GitHub 仓库地址",
+          "placeholder": "https://github.com/owner/repo",
+          "hint": "支持公开仓库，也支持带 /tree/branch/path 的子目录地址。"
+        },
+        "targetRole": {
+          "label": "应聘方向 / 目标岗位",
+          "placeholder": "例如：测试工程师、前端工程师、Java 后端工程师",
+          "hint": "AI 会根据目标岗位调整项目经历重点，例如测试方向会突出测试设计、自动化、缺陷定位和质量保障。"
+        },
+        "instructions": {
+          "label": "补充要求",
+          "placeholder": "例如：突出前端工程能力、强调性能优化、面向 Java 后端岗位..."
+        },
+        "preview": {
+          "title": "生成预览",
+          "empty": "点击生成后，这里会显示 AI 输出的项目经历草稿。",
+          "generating": "AI 正在分析项目...",
+          "untitled": "未命名项目",
+          "items": "条亮点"
+        },
+        "actions": {
+          "cancel": "取消",
+          "generate": "生成项目经历",
+          "regenerate": "重新生成",
+          "apply": "应用到当前项目"
+        },
+        "toast": {
+          "configRequired": "请先配置 AI 服务商",
+          "selectLocal": "请先选择本地项目目录",
+          "githubRequired": "请输入 GitHub 仓库地址",
+          "noLocalFiles": "未读取到可分析的文本文件",
+          "localLoaded": "已读取 {count} 个项目文件",
+          "localFailed": "读取本地目录失败",
+          "generateFailed": "AI 生成项目经历失败",
+          "generated": "项目经历已生成",
+          "applied": "已应用到当前项目"
+        }
+      },
       "buttons": {
         "edit": "编辑",
         "save": "保存",

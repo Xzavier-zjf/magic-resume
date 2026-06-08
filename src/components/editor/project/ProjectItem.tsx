@@ -7,13 +7,14 @@ import {
   Reorder,
   useDragControls,
 } from "framer-motion";
-import { ChevronDown, Eye, EyeOff, GripVertical, Trash2 } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, GripVertical, Sparkles, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import Field from "../Field";
 import ThemeModal from "@/components/shared/ThemeModal";
 import { useTranslations } from "@/i18n/compat/client";
 import { Project } from "@/types/resume";
 import { Input } from "@/components/ui/input";
+import AIProjectWriterDialog from "./AIProjectWriterDialog";
 
 interface ProjectEditorProps {
   project: Project;
@@ -24,6 +25,7 @@ interface ProjectEditorProps {
 
 const ProjectEditor: React.FC<ProjectEditorProps> = ({ project, onSave }) => {
   const t = useTranslations("workbench.projectItem");
+  const [aiWriterOpen, setAiWriterOpen] = useState(false);
   const handleChange = (field: keyof Project, value: string) => {
     onSave({
       ...project,
@@ -33,6 +35,18 @@ const ProjectEditor: React.FC<ProjectEditorProps> = ({ project, onSave }) => {
 
   return (
     <div className="space-y-5">
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setAiWriterOpen(true)}
+          className="gap-2"
+        >
+          <Sparkles className="h-4 w-4 text-primary" />
+          {t("aiWriter.entry")}
+        </Button>
+      </div>
       <div className="grid gap-5">
         <div className="grid gap-4 md:grid-cols-2">
           <Field
@@ -98,6 +112,12 @@ const ProjectEditor: React.FC<ProjectEditorProps> = ({ project, onSave }) => {
           placeholder={t("placeholders.description")}
         />
       </div>
+      <AIProjectWriterDialog
+        open={aiWriterOpen}
+        onOpenChange={setAiWriterOpen}
+        project={project}
+        onApply={onSave}
+      />
     </div>
   );
 };
