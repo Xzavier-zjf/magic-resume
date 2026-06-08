@@ -9,7 +9,7 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
 };
 
 const Image = forwardRef<HTMLImageElement, Props>(function Image(
-  { src, alt, fill, style, priority, ...rest },
+  { src, alt, fill, style, priority, loading, ...rest },
   ref
 ) {
   const resolvedSrc = typeof src === "string" ? src : src.src;
@@ -28,7 +28,7 @@ const Image = forwardRef<HTMLImageElement, Props>(function Image(
       ref={ref}
       src={resolvedSrc}
       alt={alt || ""}
-      loading={priority ? "eager" : "lazy"}
+      loading={priority ? "eager" : loading}
       style={mergedStyle}
       {...rest}
     />

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { getConfig, getFileHandle } from "@/utils/fileSystem";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useAIConfigStore } from "@/store/useAIConfigStore";
+import { AI_MODEL_CONFIGS } from "@/config/ai";
 import { DEFAULT_TEMPLATES } from "@/config";
 import { CreateResumeModal } from "./CreateResumeModal";
 import { ImportResumeDialog } from "./ImportResumeDialog";
@@ -44,8 +45,19 @@ export const ResumeWorkbench = () => {
         createResume,
     } = useResumeStore();
     const {
+        selectedModel,
+        doubaoApiKey,
+        doubaoModelId,
+        deepseekApiKey,
+        deepseekModelId,
+        openaiApiKey,
+        openaiModelId,
+        openaiApiEndpoint,
         geminiApiKey,
         geminiModelId,
+        getSelectedProviderModel,
+        getSelectedCustomModel,
+        isConfigured,
     } = useAIConfigStore();
     const router = useRouter();
     const [hasConfiguredFolder, setHasConfiguredFolder] = useState(false);
@@ -186,11 +198,51 @@ export const ResumeWorkbench = () => {
     };
 
     const importResumeFromPdf = async (file: File) => {
-        if (!geminiApiKey || !geminiModelId) {
-            toast.error(t("dashboard.resumes.importDialog.geminiConfigRequired"));
+        if (!isConfigured()) {
+            toast.error(t("dashboard.resumes.importDialog.aiConfigRequired"));
             router.push("/app/dashboard/ai");
             return;
         }
+
+        const providerModel = getSelectedProviderModel();
+        const customModel = getSelectedCustomModel();
+
+        if (!providerModel?.supportsVision) {
+            toast.error(t("dashboard.resumes.importDialog.visionModelRequired"));
+            router.push("/app/dashboard/ai");
+            return;
+        }
+
+        const config = AI_MODEL_CONFIGS[selectedModel];
+        const fallbackApiKey =
+            selectedModel === "openai"
+                ? openaiApiKey
+                : selectedModel === "gemini"
+                    ? geminiApiKey
+                    : selectedModel === "custom"
+                        ? customModel?.apiKey || ""
+                    : selectedModel === "doubao"
+                        ? doubaoApiKey
+                        : deepseekApiKey;
+        const fallbackModelId =
+            selectedModel === "openai"
+                ? openaiModelId
+                : selectedModel === "gemini"
+                    ? geminiModelId
+                    : selectedModel === "custom"
+                        ? customModel?.modelId || ""
+                    : selectedModel === "doubao"
+                        ? doubaoModelId
+                        : deepseekModelId;
+        const fallbackApiEndpoint =
+            selectedModel === "openai"
+                ? openaiApiEndpoint
+                : selectedModel === "custom"
+                    ? customModel?.apiEndpoint
+                    : undefined;
+        const apiKey = providerModel?.apiKey || fallbackApiKey;
+        const modelId = providerModel?.modelId || fallbackModelId;
+        const apiEndpoint = providerModel?.apiEndpoint || fallbackApiEndpoint;
 
         const pdfImages = await extractImagesFromPdf(file);
         if (pdfImages.length === 0) {
@@ -204,18 +256,34 @@ export const ResumeWorkbench = () => {
             },
             body: JSON.stringify({
                 images: pdfImages,
-                apiKey: geminiApiKey,
-                model: geminiModelId,
+                apiKey,
+                apiEndpoint,
+                model: config.requiresModelId ? modelId : config.defaultModel,
+                modelType: selectedModel,
                 locale,
             }),
         });
 
-        const data = await response.json();
-        if (!response.ok) {
-            const message = data?.details
+        const responseText = await response.text();
+        let data: any = null;
+        try {
+            data = responseText ? JSON.parse(responseText) : null;
+        } catch {
+            data = null;
+        }
+
+        if (!response.ok || data?.ok === false) {
+            const rawMessage = data?.details
                 ? `${data?.error || "Resume import failed"}\n${data.details}`
-                : data?.error || "Resume import failed";
+                : data?.error || responseText || "Resume import failed";
+            const message = /^<!doctype html/i.test(rawMessage.trim()) || /^<html/i.test(rawMessage.trim())
+                ? "AI 服务商网关错误，请检查 API Endpoint 是否可用，或稍后重试。"
+                : rawMessage;
             throw new Error(message);
+        }
+
+        if (!data) {
+            throw new Error("Invalid server response");
         }
 
         const aiResume = data?.resume
@@ -266,11 +334,11 @@ export const ResumeWorkbench = () => {
             setIsImporting(true);
             await importResumeFromPdf(file);
         } catch (error) {
-            console.error("Import PDF error:", error);
             const message =
                 error instanceof Error && error.message
                     ? error.message
                     : t("dashboard.resumes.importDialog.pdfError");
+            console.error("Import PDF error:", message);
             toast.error(message);
         } finally {
             setIsImporting(false);

@@ -100,26 +100,43 @@ export const useGrammarStore = create<GrammarStore>((set, get) => ({
       openaiModelId,
       openaiApiEndpoint,
       geminiApiKey,
-      geminiModelId
+      geminiModelId,
+      getSelectedProviderModel,
+      getSelectedCustomModel
     } = useAIConfigStore.getState();
 
     const config = AI_MODEL_CONFIGS[selectedModel];
-    const apiKey =
+    const providerModel = getSelectedProviderModel();
+    const customModel = getSelectedCustomModel();
+    const fallbackApiKey =
       selectedModel === "doubao"
         ? doubaoApiKey
         : selectedModel === "openai"
           ? openaiApiKey
           : selectedModel === "gemini"
             ? geminiApiKey
-            : deepseekApiKey;
-    const modelId =
+            : selectedModel === "custom"
+              ? customModel?.apiKey || ""
+              : deepseekApiKey;
+    const fallbackModelId =
       selectedModel === "doubao"
         ? doubaoModelId
         : selectedModel === "openai"
           ? openaiModelId
           : selectedModel === "gemini"
             ? geminiModelId
-            : deepseekModelId;
+            : selectedModel === "custom"
+              ? customModel?.modelId || ""
+              : deepseekModelId;
+    const fallbackApiEndpoint =
+      selectedModel === "openai"
+        ? openaiApiEndpoint
+        : selectedModel === "custom"
+          ? customModel?.apiEndpoint
+          : undefined;
+    const apiKey = providerModel?.apiKey || fallbackApiKey;
+    const modelId = providerModel?.modelId || fallbackModelId;
+    const apiEndpoint = providerModel?.apiEndpoint || fallbackApiEndpoint;
 
     set({ isChecking: true });
 
@@ -134,7 +151,7 @@ export const useGrammarStore = create<GrammarStore>((set, get) => ({
           apiKey,
           model: config.requiresModelId ? modelId : config.defaultModel,
           modelType: selectedModel,
-          apiEndpoint: selectedModel === "openai" ? openaiApiEndpoint : undefined,
+          apiEndpoint,
         }),
       });
 

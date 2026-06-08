@@ -55,6 +55,8 @@ const parseRange = (rangeValue: string) => {
 export function UnifiedDateRangeInput({
   value,
   onChange,
+  label,
+  placeholder,
   className,
 }: UnifiedDateRangeInputProps) {
   const [range, setRange] = useState<{ start: CalendarDate | null; end: CalendarDate | null }>(
@@ -113,7 +115,7 @@ export function UnifiedDateRangeInput({
               variant="bordered"
               granularity={"month" as any}
               shouldForceLeadingZeros
-              aria-label="Start Date"
+              aria-label={`${label || placeholder || "Date range"} start`}
               classNames={{
                 inputWrapper:
                   "bg-background hover:bg-muted/20 h-9 min-h-0 py-0 px-3 shadow-sm ring-1 ring-inset ring-input border-0",
@@ -129,7 +131,7 @@ export function UnifiedDateRangeInput({
               variant="bordered"
               granularity={"month" as any}
               shouldForceLeadingZeros
-              aria-label="End Date"
+              aria-label={`${label || placeholder || "Date range"} end`}
               isDisabled={isPresent}
               className={cn(isPresent && "opacity-50")}
               classNames={{

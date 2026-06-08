@@ -129,6 +129,7 @@ const Field = ({
         <UnifiedDateInput
           value={value}
           onChange={onChange}
+          label={label}
           placeholder={placeholder}
           isRequired={required}
           className={className}
@@ -144,6 +145,7 @@ const Field = ({
         <UnifiedDateRangeInput
           value={value}
           onChange={onChange}
+          label={label}
           placeholder={placeholder}
           className={className}
         />

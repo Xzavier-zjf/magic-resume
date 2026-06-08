@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AIModelType, AI_MODEL_CONFIGS } from "@/config/ai";
 import { formatGeminiErrorMessage, getGeminiModelInstance } from "@/lib/server/gemini";
 
 const parseJsonPayload = (content: string) => {
@@ -39,44 +40,46 @@ const extractBase64Payload = (value: string) => {
   };
 };
 
-export const Route = createFileRoute("/api/resume-import")({
-  server: {
-    handlers: {
-      POST: async ({ request }) => {
-        try {
-          const body = await request.json();
-          const { apiKey, model, content, images, locale } = body as {
-            apiKey: string;
-            model?: string;
-            content?: string;
-            images?: string[];
-            locale?: string;
-          };
+const parseUpstreamError = (raw: string, fallback: string) => {
+  if (!raw) return fallback;
+  const text = raw.trim();
+  if (/^<!doctype html/i.test(text) || /^<html/i.test(text)) {
+    const title = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]
+      ?.replace(/\s+/g, " ")
+      .trim();
+    return title
+      ? `AI 服务商网关错误：${title}`
+      : "AI 服务商网关错误，请检查 API Endpoint 是否可用，或稍后重试。";
+  }
 
-          if (!apiKey || (!content && (!images || images.length === 0))) {
-            return Response.json(
-              { error: "Missing API key or resume content/images" },
-              { status: 400 }
-            );
-          }
+  try {
+    const data = JSON.parse(text) as {
+      error?: { message?: string } | string;
+      message?: string;
+    };
+    const message =
+      typeof data.error === "string"
+        ? data.error
+        : data.error?.message || data.message || fallback;
 
-          const language = locale === "en" ? "English" : "Chinese";
-          const geminiModel = model || "gemini-flash-latest";
-          const imageParts = Array.isArray(images)
-            ? images.map((image) => {
-                const payload = extractBase64Payload(image);
-                return {
-                  inlineData: {
-                    mimeType: payload.mimeType,
-                    data: payload.data,
-                  },
-                };
-              })
-            : [];
-          const modelInstance = getGeminiModelInstance({
-            apiKey,
-            model: geminiModel,
-            systemInstruction: `你是一个专业的简历结构化助手。根据用户提供的简历内容，提取信息并只输出一个合法 JSON 对象。
+    if (/image_url|vision|multi[-\s]?modal|response_format/i.test(message)) {
+      return `当前模型或服务商不支持 OpenAI Vision 兼容的图片识别请求：${message}`;
+    }
+
+    return message;
+  } catch {
+    return raw;
+  }
+};
+
+const createImportErrorResponse = (error: string, status = 400) =>
+  Response.json({
+    ok: false,
+    error,
+    status,
+  });
+
+const createSystemInstruction = (language: string) => `你是一个专业的简历结构化助手。根据用户提供的简历内容，提取信息并只输出一个合法 JSON 对象。
 
 输出约束：
 1. 只允许输出 JSON，不要输出 Markdown，不要输出解释。
@@ -126,51 +129,137 @@ JSON 结构：
     }
   ],
   "skills": ["", ""]
-}`,
-            generationConfig: {
-              temperature: 0.2,
-              responseMimeType: "application/json",
-            },
-          });
+}`;
 
-          const inputParts = [
-            {
-              text:
-                content ||
-                "请识别以下简历页面图片中的信息，并严格按 JSON 结构输出。",
-            },
-            ...imageParts,
-          ];
+export const Route = createFileRoute("/api/resume-import")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        try {
+          const body = await request.json();
+          const { apiKey, model, modelType = "gemini", apiEndpoint, content, images, locale } = body as {
+            apiKey: string;
+            model?: string;
+            modelType?: AIModelType;
+            apiEndpoint?: string;
+            content?: string;
+            images?: string[];
+            locale?: string;
+          };
 
-          const result = await modelInstance.generateContent(inputParts);
-          const aiContent = result.response.text();
+          if (!apiKey || (!content && (!images || images.length === 0))) {
+            return createImportErrorResponse("Missing API key or resume content/images");
+          }
+
+          const language = locale === "en" ? "English" : "Chinese";
+          const systemInstruction = createSystemInstruction(language);
+          let aiContent = "";
+
+          if (modelType === "gemini") {
+            const geminiModel = model || "gemini-flash-latest";
+            const imageParts = Array.isArray(images)
+              ? images.map((image) => {
+                  const payload = extractBase64Payload(image);
+                  return {
+                    inlineData: {
+                      mimeType: payload.mimeType,
+                      data: payload.data,
+                    },
+                  };
+                })
+              : [];
+            const modelInstance = getGeminiModelInstance({
+              apiKey,
+              model: geminiModel,
+              systemInstruction,
+              generationConfig: {
+                temperature: 0.2,
+                responseMimeType: "application/json",
+              },
+            });
+
+            const inputParts = [
+              {
+                text:
+                  content ||
+                  "请识别以下简历页面图片中的信息，并严格按 JSON 结构输出。",
+              },
+              ...imageParts,
+            ];
+
+            const result = await modelInstance.generateContent(inputParts);
+            aiContent = result.response.text();
+          } else {
+            const modelConfig = AI_MODEL_CONFIGS[modelType];
+            const requestUrl = modelConfig.url(apiEndpoint);
+            if (!apiEndpoint || !requestUrl.startsWith("http")) {
+              return createImportErrorResponse("API Endpoint 配置无效，请填写类似 https://api.openai.com/v1 的地址。");
+            }
+
+            const response = await fetch(requestUrl, {
+              method: "POST",
+              headers: modelConfig.headers(apiKey),
+              body: JSON.stringify({
+                model,
+                temperature: 0.2,
+                response_format: {
+                  type: "json_object",
+                },
+                messages: [
+                  {
+                    role: "system",
+                    content: systemInstruction,
+                  },
+                  {
+                    role: "user",
+                    content: [
+                      {
+                        type: "text",
+                        text:
+                          content ||
+                          "请识别以下简历页面图片中的信息，并严格按 JSON 结构输出。",
+                      },
+                      ...(Array.isArray(images)
+                        ? images.map((image) => ({
+                            type: "image_url",
+                            image_url: {
+                              url: image,
+                            },
+                          }))
+                        : []),
+                    ],
+                  },
+                ],
+              }),
+            });
+
+            const raw = await response.text();
+            if (!response.ok) {
+              const fallbackMessage = `Upstream API error: ${response.status} ${response.statusText}`;
+              return createImportErrorResponse(parseUpstreamError(raw, fallbackMessage), response.status);
+            }
+
+            const data = raw ? JSON.parse(raw) : {};
+            aiContent = data?.choices?.[0]?.message?.content || "";
+          }
 
           if (!aiContent || typeof aiContent !== "string") {
-            return Response.json(
-              { error: "AI did not return structured content" },
-              { status: 500 }
-            );
+            return createImportErrorResponse("AI did not return structured content", 500);
           }
 
           const parsedResume = parseJsonPayload(aiContent);
           if (!parsedResume) {
-            return Response.json(
-              { error: "Failed to parse AI JSON output" },
-              { status: 500 }
-            );
+            return createImportErrorResponse("Failed to parse AI JSON output", 500);
           }
 
-          return Response.json({ resume: parsedResume });
+          return Response.json({ ok: true, resume: parsedResume });
         } catch (error) {
           console.error("Error in resume import:", error);
           const status =
             typeof (error as any)?.status === "number"
               ? (error as any).status
               : 500;
-          return Response.json(
-            { error: formatGeminiErrorMessage(error) },
-            { status }
-          );
+          return createImportErrorResponse(formatGeminiErrorMessage(error), status);
         }
       },
     },

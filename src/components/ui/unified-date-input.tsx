@@ -18,6 +18,7 @@ export function UnifiedDateInput({
   value,
   onChange,
   label,
+  placeholder,
   isRequired,
   className,
 }: UnifiedDateInputProps) {
@@ -59,6 +60,7 @@ export function UnifiedDateInput({
           value={isPresent ? null : selectedDate}
           onChange={handleDateChange}
           isRequired={isRequired}
+          aria-label={label || placeholder || "Date"}
           granularity={"month" as any}
           variant="bordered"
           labelPlacement="outside"

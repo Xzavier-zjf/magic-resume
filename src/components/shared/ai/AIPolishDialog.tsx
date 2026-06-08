@@ -63,6 +63,8 @@ export default function AIPolishDialog({
     openaiApiEndpoint,
     geminiApiKey,
     geminiModelId,
+    getSelectedProviderModel,
+    getSelectedCustomModel,
     isConfigured
   } = useAIConfigStore();
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -124,22 +126,37 @@ export default function AIPolishDialog({
       abortControllerRef.current = new AbortController();
 
       const config = AI_MODEL_CONFIGS[selectedModel];
-      const apiKey =
+      const providerModel = getSelectedProviderModel();
+      const customModel = getSelectedCustomModel();
+      const fallbackApiKey =
         selectedModel === "doubao"
           ? doubaoApiKey
           : selectedModel === "openai"
             ? openaiApiKey
             : selectedModel === "gemini"
               ? geminiApiKey
-              : deepseekApiKey;
-      const modelId =
+              : selectedModel === "custom"
+                ? customModel?.apiKey || ""
+                : deepseekApiKey;
+      const fallbackModelId =
         selectedModel === "doubao"
           ? doubaoModelId
           : selectedModel === "openai"
             ? openaiModelId
             : selectedModel === "gemini"
               ? geminiModelId
-              : deepseekModelId;
+              : selectedModel === "custom"
+                ? customModel?.modelId || ""
+                : deepseekModelId;
+      const fallbackApiEndpoint =
+        selectedModel === "openai"
+          ? openaiApiEndpoint
+          : selectedModel === "custom"
+            ? customModel?.apiEndpoint
+            : undefined;
+      const apiKey = providerModel?.apiKey || fallbackApiKey;
+      const modelId = providerModel?.modelId || fallbackModelId;
+      const apiEndpoint = providerModel?.apiEndpoint || fallbackApiEndpoint;
 
       const response = await fetch("/api/polish", {
         method: "POST",
@@ -149,7 +166,7 @@ export default function AIPolishDialog({
         body: JSON.stringify({
           content: turndownService.turndown(content),
           apiKey,
-          apiEndpoint: selectedModel === "openai" ? openaiApiEndpoint : undefined,
+          apiEndpoint,
           model: config.requiresModelId ? modelId : config.defaultModel,
           modelType: selectedModel,
           customInstructions: customInstructions.trim() || undefined
