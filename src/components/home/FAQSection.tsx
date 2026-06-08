@@ -11,7 +11,10 @@ import AnimatedFeature from "./client/AnimatedFeature";
 
 export default function FAQSection() {
   const t = useTranslations("home.faq");
-  const faqItems = t.raw("items");
+  const faqItems = t.raw("items") as Array<{
+    question: string;
+    answer: string;
+  }>;
 
   return (
     <section className="py-24 md:py-40 bg-background relative overflow-hidden">

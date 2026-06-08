@@ -6,6 +6,18 @@ const DB_VERSION = 2;
 
 let db: IDBDatabase | null = null;
 
+type FileSystemPermissionMode = "read" | "readwrite";
+
+type PermissionedFileSystemHandle = FileSystemHandle & {
+  queryPermission: (descriptor?: { mode?: FileSystemPermissionMode }) => Promise<PermissionState>;
+  requestPermission: (descriptor?: { mode?: FileSystemPermissionMode }) => Promise<PermissionState>;
+};
+
+const getDB = () => {
+  if (!db) throw new Error("Database not initialized");
+  return db;
+};
+
 const initDB = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (db) {
@@ -38,10 +50,10 @@ export const storeFileHandle = async (
   handle: FileSystemHandle
 ): Promise<void> => {
   await initDB();
-  if (!db) throw new Error("Database not initialized");
+  const database = getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(HANDLE_STORE, "readwrite");
+    const transaction = database.transaction(HANDLE_STORE, "readwrite");
     const store = transaction.objectStore(HANDLE_STORE);
     const request = store.put(handle, key);
 
@@ -54,10 +66,10 @@ export const getFileHandle = async (
   key: string
 ): Promise<FileSystemHandle | null> => {
   await initDB();
-  if (!db) throw new Error("Database not initialized");
+  const database = getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(HANDLE_STORE, "readonly");
+    const transaction = database.transaction(HANDLE_STORE, "readonly");
     const store = transaction.objectStore(HANDLE_STORE);
     const request = store.get(key);
 
@@ -68,10 +80,10 @@ export const getFileHandle = async (
 
 export const storeConfig = async (key: string, value: any): Promise<void> => {
   await initDB();
-  if (!db) throw new Error("Database not initialized");
+  const database = getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(CONFIG_STORE, "readwrite");
+    const transaction = database.transaction(CONFIG_STORE, "readwrite");
     const store = transaction.objectStore(CONFIG_STORE);
     const request = store.put(value, key);
 
@@ -82,10 +94,10 @@ export const storeConfig = async (key: string, value: any): Promise<void> => {
 
 export const getConfig = async (key: string): Promise<any> => {
   await initDB();
-  if (!db) throw new Error("Database not initialized");
+  const database = getDB();
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(CONFIG_STORE, "readonly");
+    const transaction = database.transaction(CONFIG_STORE, "readonly");
     const store = transaction.objectStore(CONFIG_STORE);
     const request = store.get(key);
 
@@ -102,15 +114,16 @@ export const verifyPermission = async (
     return false;
   }
 
+  const permissionedHandle = handle as PermissionedFileSystemHandle;
   const options = { mode };
 
   // 检查当前权限
-  if ((await handle.queryPermission(options)) === "granted") {
+  if ((await permissionedHandle.queryPermission(options)) === "granted") {
     return true;
   }
 
   // 请求权限
-  if ((await handle.requestPermission(options)) === "granted") {
+  if ((await permissionedHandle.requestPermission(options)) === "granted") {
     return true;
   }
 

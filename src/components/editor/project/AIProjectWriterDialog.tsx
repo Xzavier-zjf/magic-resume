@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FolderOpen, Github, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "@/i18n/compat/client";
@@ -13,9 +13,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { AI_MODEL_CONFIGS } from "@/config/ai";
+import {
+  getTargetRoleLabel,
+  getTargetRoleValue,
+  TARGET_ROLE_PRESETS,
+} from "@/config/targetRoles";
 import { cn } from "@/lib/utils";
 import { useAIConfigStore } from "@/store/useAIConfigStore";
 import { useResumeStore } from "@/store/useResumeStore";
@@ -34,6 +46,22 @@ type GeneratedProject = {
   link: string;
   linkLabel: string;
 };
+
+type IterableDirectoryHandle = FileSystemDirectoryHandle & {
+  entries: () => AsyncIterableIterator<[string, FileSystemHandle]>;
+};
+
+type PickedFileHandle = FileSystemHandle & {
+  kind: "file";
+  getFile: () => Promise<File>;
+};
+
+const isDirectoryHandle = (
+  handle: FileSystemHandle
+): handle is FileSystemDirectoryHandle => handle.kind === "directory";
+
+const isFileHandle = (handle: FileSystemHandle): handle is PickedFileHandle =>
+  handle.kind === "file";
 
 interface AIProjectWriterDialogProps {
   open: boolean;
@@ -166,6 +194,14 @@ const getCurrentLocale = () => {
   );
 };
 
+const findRolePresetId = (role: string, locale: string) => {
+  const normalizedRole = role.trim();
+  const preset = TARGET_ROLE_PRESETS.find(
+    (item) => getTargetRoleValue(item, locale) === normalizedRole
+  );
+  return preset?.id || "custom";
+};
+
 const convertDescriptionToHtml = (items: string[]) => {
   const safeItems = items.map((item) => item.trim()).filter(Boolean);
   if (safeItems.length === 0) return "";
@@ -200,15 +236,16 @@ const readDirectoryFiles = async () => {
   ) => {
     if (depth > 4 || candidates.length >= MAX_LOCAL_FILES * 3) return;
 
-    for await (const [name, handle] of directory.entries()) {
+    for await (const [name, handle] of (directory as IterableDirectoryHandle).entries()) {
       const path = prefix ? `${prefix}/${name}` : name;
       if (isExcludedPath(path)) continue;
 
-      if (handle.kind === "directory") {
+      if (isDirectoryHandle(handle)) {
         await walk(handle, path, depth + 1);
         continue;
       }
 
+      if (!isFileHandle(handle)) continue;
       if (!isTextLikePath(path)) continue;
 
       const file = await handle.getFile();
@@ -255,7 +292,28 @@ export default function AIProjectWriterDialog({
   const { activeResume } = useResumeStore();
   const [sourceType, setSourceType] = useState<"local" | "github">("local");
   const [githubUrl, setGithubUrl] = useState(project.link || "");
-  const [targetRole, setTargetRole] = useState(activeResume?.basic?.title || "");
+  const currentLocale = getCurrentLocale();
+  const [rolePreset, setRolePreset] = useState(
+    TARGET_ROLE_PRESETS.some(
+      (preset) =>
+        getTargetRoleValue(preset, currentLocale) === activeResume?.targetRole ||
+        getTargetRoleValue(preset, currentLocale) === activeResume?.basic?.title
+    )
+      ? TARGET_ROLE_PRESETS.find(
+          (preset) =>
+            getTargetRoleValue(preset, currentLocale) === activeResume?.targetRole ||
+            getTargetRoleValue(preset, currentLocale) === activeResume?.basic?.title
+        )?.id || "custom"
+      : "custom"
+  );
+  const [targetRole, setTargetRole] = useState(
+    activeResume?.targetRole ||
+      activeResume?.basic?.title ||
+      getTargetRoleValue(TARGET_ROLE_PRESETS[0], currentLocale)
+  );
+  const [jobDescription, setJobDescription] = useState(
+    activeResume?.jobDescription || ""
+  );
   const [customInstructions, setCustomInstructions] = useState("");
   const [localFiles, setLocalFiles] = useState<SourceFile[]>([]);
   const [localDirectoryName, setLocalDirectoryName] = useState("");
@@ -286,6 +344,17 @@ export default function AIProjectWriterDialog({
       name: localDirectoryName || t("local.directory"),
     });
   }, [localDirectoryName, localFiles.length, t]);
+
+  useEffect(() => {
+    if (!open) return;
+    const nextRole =
+      activeResume?.targetRole ||
+      activeResume?.basic?.title ||
+      getTargetRoleValue(TARGET_ROLE_PRESETS[0], currentLocale);
+    setTargetRole(nextRole);
+    setRolePreset(findRolePresetId(nextRole, currentLocale));
+    setJobDescription(activeResume?.jobDescription || "");
+  }, [activeResume?.basic?.title, activeResume?.jobDescription, activeResume?.targetRole, currentLocale, open]);
 
   const getAIRequestConfig = () => {
     const config = AI_MODEL_CONFIGS[selectedModel];
@@ -384,8 +453,9 @@ export default function AIProjectWriterDialog({
           files: sourceType === "local" ? localFiles : undefined,
           currentProject: project,
           targetRole: targetRole.trim() || undefined,
+          jobDescription: jobDescription.trim() || undefined,
           customInstructions: customInstructions.trim() || undefined,
-          locale: getCurrentLocale(),
+          locale: currentLocale,
         }),
       });
 
@@ -426,6 +496,15 @@ export default function AIProjectWriterDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (isGenerating || isReadingLocal) return;
     onOpenChange(nextOpen);
+  };
+
+  const handleRolePresetChange = (value: string) => {
+    setRolePreset(value);
+    if (value === "custom") return;
+    const preset = TARGET_ROLE_PRESETS.find((item) => item.id === value);
+    if (preset) {
+      setTargetRole(getTargetRoleValue(preset, currentLocale));
+    }
   };
 
   return (
@@ -502,16 +581,49 @@ export default function AIProjectWriterDialog({
               <Label htmlFor="project-target-role">
                 {t("targetRole.label")}
               </Label>
+              <Select value={rolePreset} onValueChange={handleRolePresetChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TARGET_ROLE_PRESETS.map((preset) => (
+                    <SelectItem key={preset.id} value={preset.id}>
+                      {getTargetRoleLabel(preset, currentLocale)}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom">
+                    {t("targetRole.custom")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <Input
                 id="project-target-role"
                 value={targetRole}
-                onChange={(event) => setTargetRole(event.target.value)}
+                onChange={(event) => {
+                  setTargetRole(event.target.value);
+                  setRolePreset("custom");
+                }}
                 placeholder={t("targetRole.placeholder")}
                 disabled={isGenerating}
               />
               <p className="text-xs leading-5 text-muted-foreground">
                 {t("targetRole.hint")}
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="project-ai-jd">
+                {t("jobDescription.label")}
+              </Label>
+              <Textarea
+                id="project-ai-jd"
+                value={jobDescription}
+                onChange={(event) => setJobDescription(event.target.value)}
+                placeholder={t("jobDescription.placeholder")}
+                disabled={isGenerating}
+                rows={3}
+                className="resize-none"
+              />
             </div>
 
             <div className="space-y-2">

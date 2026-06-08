@@ -105,6 +105,8 @@
     "sidebar": {
       "appName": "Magic Resume",
       "resumes": "Resumes",
+      "analyze": "Role Analysis",
+      "applications": "Applications",
       "settings": "Settings",
       "templates": "Templates",
       "ai": "AI Config"
@@ -141,6 +143,24 @@
       },
       "deleteConfirmTitle": "Confirm Delete Resume?",
       "deleteConfirmDescription": "This action cannot be undone. This will permanently delete this resume and remove the data from your device.",
+      "version": {
+        "shortAction": "Version",
+        "title": "Create Role Version",
+        "description": "Create an independent copy for a target role and keep the JD context with it. The new version can be edited, exported, or deleted separately.",
+        "rolePreset": "Role preset",
+        "customRole": "Custom role",
+        "targetRole": "Target role",
+        "targetRolePlaceholder": "e.g. QA Engineer, Java Backend Engineer",
+        "versionName": "Version name",
+        "versionNamePlaceholder": "e.g. QA Engineer Version",
+        "jobDescription": "Job Description",
+        "jdPlaceholder": "Paste the JD so later analysis and AI writing can align to it.",
+        "create": "Create Version",
+        "defaultName": "{role} Version",
+        "fallbackName": "Role Version",
+        "createSuccess": "Role version created",
+        "createFailed": "Failed to create role version"
+      },
       "createDialog": {
         "title": "Create New Resume",
         "description": "Start a new resume from a blank template",
@@ -213,6 +233,127 @@
           "apiKey": "Gemini API Key",
           "modelId": "Gemini Model ID"
         }
+      }
+    },
+    "analyze": {
+      "kicker": "JD matching and ATS scoring",
+      "title": "Role Analysis",
+      "description": "Select a resume, enter a target role and JD, get a local rule score first, then let your configured AI add more tailored suggestions.",
+      "form": {
+        "title": "Analysis Context",
+        "description": "You can still generate rule-based scores without AI configured.",
+        "resume": "Resume",
+        "resumePlaceholder": "Select a resume",
+        "rolePreset": "Role direction",
+        "customRole": "Custom role",
+        "targetRole": "Target role",
+        "targetRolePlaceholder": "e.g. QA Engineer",
+        "jobDescription": "Job Description",
+        "jdPlaceholder": "Paste the job responsibilities, requirements, and preferred qualifications.",
+        "localHint": "AI is not configured. Only local rule analysis will be shown."
+      },
+      "actions": {
+        "run": "Run Analysis",
+        "aiEnhancing": "Enhancing with AI"
+      },
+      "scores": {
+        "overall": "Overall",
+        "keyword": "Keywords",
+        "skill": "Skills",
+        "project": "Projects",
+        "ats": "ATS"
+      },
+      "result": {
+        "summary": "Analysis Result",
+        "aiEnhanced": "AI Enhanced",
+        "localRule": "Local Rules",
+        "matchedKeywords": "Matched Keywords",
+        "missingKeywords": "Missing Keywords",
+        "strengths": "Strengths",
+        "risks": "ATS / Application Risks",
+        "suggestions": "Suggestions",
+        "rewrites": "Rewrite Drafts",
+        "rewritesDescription": "Use these as rewrite directions and verify they match your real experience before applying.",
+        "empty": "No data"
+      },
+      "sections": {
+        "basic": "Basic",
+        "skills": "Skills",
+        "experience": "Experience",
+        "projects": "Projects",
+        "selfEvaluation": "Self Evaluation"
+      },
+      "empty": {
+        "title": "Ready for role analysis",
+        "description": "Enter a role and JD to see keyword coverage, skill matching, project relevance, and ATS readability scores."
+      },
+      "version": {
+        "create": "Create Role Version",
+        "defaultName": "{role} Version",
+        "fallbackName": "Role Version"
+      },
+      "toast": {
+        "selectResume": "Please select a resume first",
+        "needContext": "Please enter a target role or JD",
+        "localOnly": "Local rule analysis generated",
+        "aiEnhanced": "AI enhanced analysis completed",
+        "aiFailed": "AI enhancement failed. Local results are kept.",
+        "versionCreated": "Role version created",
+        "versionFailed": "Failed to create role version"
+      }
+    },
+    "applications": {
+      "kicker": "Local application tracking",
+      "title": "Applications",
+      "description": "Track company, role, JD, status, and linked resume version. Everything stays in local storage.",
+      "actions": {
+        "add": "Add Application"
+      },
+      "status": {
+        "all": "All",
+        "pending": "Pending",
+        "applied": "Applied",
+        "written": "Written Test",
+        "interview": "Interviewing",
+        "offer": "Offer",
+        "rejected": "Rejected",
+        "archived": "Archived"
+      },
+      "list": {
+        "title": "Application Records",
+        "description": "Sorted by last update. Use status cards to filter.",
+        "noResume": "No linked resume"
+      },
+      "fields": {
+        "company": "Company",
+        "position": "Position",
+        "status": "Status",
+        "resume": "Linked Resume",
+        "noResume": "No linked resume",
+        "appliedAt": "Applied Date",
+        "interviewAt": "Interview Date",
+        "jobDescription": "Job Description",
+        "notes": "Notes"
+      },
+      "placeholders": {
+        "company": "e.g. Example Tech",
+        "position": "e.g. QA Engineer",
+        "jobDescription": "Paste the JD for later role analysis and version creation.",
+        "notes": "Track source, interview feedback, todos, and follow-up notes."
+      },
+      "dialog": {
+        "createTitle": "Add Application",
+        "editTitle": "Edit Application"
+      },
+      "empty": {
+        "title": "No applications yet",
+        "description": "Add the first record to track status and connect it with a resume version."
+      },
+      "toast": {
+        "required": "Please enter company and position",
+        "created": "Application record added",
+        "updated": "Application record updated",
+        "deleted": "Application record deleted"
       }
     },
     "templates": {
@@ -548,7 +689,12 @@
         "targetRole": {
           "label": "Target Role",
           "placeholder": "e.g. QA Engineer, Frontend Engineer, Java Backend Engineer",
+          "custom": "Custom role",
           "hint": "AI will tune the project experience for this role. For QA roles, it will emphasize test design, automation, debugging, and quality assurance."
+        },
+        "jobDescription": {
+          "label": "JD Context",
+          "placeholder": "Paste the target JD so AI can prioritize project highlights by responsibilities and requirements."
         },
         "instructions": {
           "label": "Extra instructions",

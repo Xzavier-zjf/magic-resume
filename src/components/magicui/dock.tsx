@@ -7,6 +7,19 @@ interface DockProps
   className?: string;
 }
 
+type NamedElementType = React.ElementType & {
+  name?: string;
+  displayName?: string;
+};
+
+const getElementName = (element: React.ReactElement) => {
+  const type = element.type as NamedElementType;
+  return type.displayName || type.name || "";
+};
+
+const getElementChildren = (element: React.ReactElement): React.ReactNode =>
+  (element.props as { children?: React.ReactNode }).children;
+
 export function Dock({ children, className, ...props }: DockProps) {
   // Convert children to array to handle them
   const childrenArray = React.Children.toArray(children);
@@ -14,17 +27,18 @@ export function Dock({ children, className, ...props }: DockProps) {
   // Find the index of TemplateSheet for splitting
   const templateSheetIndex = childrenArray.findIndex((child) => {
     if (React.isValidElement(child)) {
-      const tooltip = child.props.children;
+      const tooltip = getElementChildren(child);
       if (React.isValidElement(tooltip)) {
-        const trigger = tooltip.props.children.find(
-          (child: any) => child?.type?.name === "TooltipTrigger"
+        const trigger = React.Children.toArray(getElementChildren(tooltip)).find(
+          (child): child is React.ReactElement =>
+            React.isValidElement(child) && getElementName(child) === "TooltipTrigger"
         );
-        if (trigger) {
-          const content = trigger.props.children;
+        if (React.isValidElement(trigger)) {
+          const content = getElementChildren(trigger);
           if (React.isValidElement(content)) {
-            const icon = content.props.children;
+            const icon = getElementChildren(content);
             return (
-              React.isValidElement(icon) && icon.type?.name === "TemplateSheet"
+              React.isValidElement(icon) && getElementName(icon) === "TemplateSheet"
             );
           }
         }

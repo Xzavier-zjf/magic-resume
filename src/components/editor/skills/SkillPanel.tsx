@@ -9,7 +9,8 @@ import { GlobalSettings } from "@/types/resume";
 const SkillPanel = () => {
   const { activeResume, updateSkillContent, updateGlobalSettings } =
     useResumeStore();
-  const { skillContent, globalSettings } = activeResume || {};
+  const skillContent = activeResume?.skillContent || "";
+  const globalSettings = activeResume?.globalSettings;
   const t = useTranslations("workbench.skillPanel");
   const skillLayout = globalSettings?.skillLayout || "single";
   const handleChange = (value: string) => {

@@ -31,6 +31,11 @@ function getLocaleSeo(locale: Locale) {
 }
 
 export const Route = createFileRoute("/$locale")({
+  beforeLoad: ({ params }) => {
+    if (!locales.includes(params.locale as Locale)) {
+      throw notFound();
+    }
+  },
   head: ({ params }) => {
     const locale = resolveLocale(params.locale);
     const seo = getLocaleSeo(locale);
@@ -68,11 +73,5 @@ export const Route = createFileRoute("/$locale")({
 });
 
 function LocaleLandingPage() {
-  const { locale } = Route.useParams();
-
-  if (!locales.includes(locale as (typeof locales)[number])) {
-    notFound();
-  }
-
   return <LandingPage />;
 }

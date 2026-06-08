@@ -106,6 +106,8 @@
     "sidebar": {
       "appName": "魔方简历",
       "resumes": "我的简历",
+      "analyze": "岗位分析",
+      "applications": "投递看板",
       "settings": "通用设置",
       "templates": "简历模板",
       "ai": "AI服务商"
@@ -142,6 +144,24 @@
       },
       "deleteConfirmTitle": "确认删除简历？",
       "deleteConfirmDescription": "此操作无法撤销。这将永久删除此简历，并从设备中移除数据。",
+      "version": {
+        "shortAction": "版本",
+        "title": "创建岗位版本",
+        "description": "基于当前简历复制一份独立版本，并记录目标岗位与 JD。新版本可单独编辑、导出和删除。",
+        "rolePreset": "岗位预设",
+        "customRole": "自定义岗位",
+        "targetRole": "目标岗位",
+        "targetRolePlaceholder": "例如：测试工程师、Java 后端工程师",
+        "versionName": "版本名称",
+        "versionNamePlaceholder": "例如：测试工程师版本",
+        "jobDescription": "岗位 JD",
+        "jdPlaceholder": "粘贴岗位描述，便于后续分析和 AI 帮写对齐。",
+        "create": "创建版本",
+        "defaultName": "{role} 版本",
+        "fallbackName": "岗位版本",
+        "createSuccess": "岗位版本已创建",
+        "createFailed": "创建岗位版本失败"
+      },
       "createDialog": {
         "title": "新建简历",
         "description": "从空白模板开始创建新简历",
@@ -214,6 +234,127 @@
           "apiKey": "Gemini API Key",
           "modelId": "Gemini 模型 ID"
         }
+      }
+    },
+    "analyze": {
+      "kicker": "JD 匹配与 ATS 评分",
+      "title": "岗位分析",
+      "description": "选择一份简历，输入目标岗位和 JD，先用本地规则生成匹配评分，再用已配置 AI 补充更具体的优化建议。",
+      "form": {
+        "title": "分析条件",
+        "description": "未配置 AI 时也可以离线生成规则评分。",
+        "resume": "选择简历",
+        "resumePlaceholder": "请选择简历",
+        "rolePreset": "岗位方向",
+        "customRole": "自定义岗位",
+        "targetRole": "目标岗位",
+        "targetRolePlaceholder": "例如：测试工程师",
+        "jobDescription": "岗位 JD",
+        "jdPlaceholder": "粘贴招聘 JD、岗位职责、任职要求等内容。",
+        "localHint": "当前未配置 AI，将仅展示本地规则分析结果。"
+      },
+      "actions": {
+        "run": "开始分析",
+        "aiEnhancing": "AI 增强中"
+      },
+      "scores": {
+        "overall": "总分",
+        "keyword": "关键词",
+        "skill": "技能覆盖",
+        "project": "项目匹配",
+        "ats": "ATS 可读性"
+      },
+      "result": {
+        "summary": "分析结果",
+        "aiEnhanced": "AI 增强",
+        "localRule": "本地规则",
+        "matchedKeywords": "已覆盖关键词",
+        "missingKeywords": "缺失关键词",
+        "strengths": "匹配优势",
+        "risks": "ATS / 投递风险",
+        "suggestions": "优化建议",
+        "rewrites": "可参考文案",
+        "rewritesDescription": "以下内容可作为改写方向，应用前请确认符合真实经历。",
+        "empty": "暂无数据"
+      },
+      "sections": {
+        "basic": "基础信息",
+        "skills": "专业技能",
+        "experience": "工作经历",
+        "projects": "项目经历",
+        "selfEvaluation": "自我评价"
+      },
+      "empty": {
+        "title": "准备开始岗位分析",
+        "description": "输入岗位方向和 JD 后，系统会展示关键词覆盖、技能匹配、项目相关性和 ATS 可读性评分。"
+      },
+      "version": {
+        "create": "创建岗位版本",
+        "defaultName": "{role} 版本",
+        "fallbackName": "岗位版本"
+      },
+      "toast": {
+        "selectResume": "请先选择简历",
+        "needContext": "请填写目标岗位或岗位 JD",
+        "localOnly": "已生成本地规则分析结果",
+        "aiEnhanced": "AI 增强分析已完成",
+        "aiFailed": "AI 增强失败，已保留本地规则结果",
+        "versionCreated": "岗位版本已创建",
+        "versionFailed": "创建岗位版本失败"
+      }
+    },
+    "applications": {
+      "kicker": "本地投递追踪",
+      "title": "投递看板",
+      "description": "记录公司、岗位、JD、投递状态和关联简历版本，所有数据保存在本地。",
+      "actions": {
+        "add": "新增投递"
+      },
+      "status": {
+        "all": "全部",
+        "pending": "待投递",
+        "applied": "已投递",
+        "written": "已笔试",
+        "interview": "面试中",
+        "offer": "Offer",
+        "rejected": "未通过",
+        "archived": "归档"
+      },
+      "list": {
+        "title": "投递记录",
+        "description": "按更新时间排序，可通过状态卡片筛选。",
+        "noResume": "未关联简历"
+      },
+      "fields": {
+        "company": "公司",
+        "position": "岗位",
+        "status": "状态",
+        "resume": "关联简历",
+        "noResume": "不关联简历",
+        "appliedAt": "投递日期",
+        "interviewAt": "面试日期",
+        "jobDescription": "岗位 JD",
+        "notes": "备注"
+      },
+      "placeholders": {
+        "company": "例如：某科技有限公司",
+        "position": "例如：测试工程师",
+        "jobDescription": "粘贴 JD，后续可用于岗位分析和版本创建。",
+        "notes": "记录投递渠道、面试反馈、待办事项等。"
+      },
+      "dialog": {
+        "createTitle": "新增投递记录",
+        "editTitle": "编辑投递记录"
+      },
+      "empty": {
+        "title": "还没有投递记录",
+        "description": "新增第一条记录后，可以按状态追踪投递进展，并关联对应简历版本。"
+      },
+      "toast": {
+        "required": "请填写公司和岗位",
+        "created": "投递记录已新增",
+        "updated": "投递记录已更新",
+        "deleted": "投递记录已删除"
       }
     },
     "templates": {
@@ -505,7 +646,12 @@
         "targetRole": {
           "label": "应聘方向 / 目标岗位",
           "placeholder": "例如：测试工程师、前端工程师、Java 后端工程师",
+          "custom": "自定义岗位",
           "hint": "AI 会根据目标岗位调整项目经历重点，例如测试方向会突出测试设计、自动化、缺陷定位和质量保障。"
+        },
+        "jobDescription": {
+          "label": "岗位 JD 上下文",
+          "placeholder": "粘贴目标岗位 JD，AI 会按岗位职责和任职要求筛选项目亮点。"
         },
         "instructions": {
           "label": "补充要求",

@@ -7,6 +7,7 @@ import {
     CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -18,11 +19,34 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import ResumeTemplateComponent from "@/components/templates";
-import { DEFAULT_TEMPLATES } from "@/config";
+import { DEFAULT_TEMPLATES } from "@/components/templates/registry";
+import {
+    getTargetRoleLabel,
+    getTargetRoleValue,
+    TARGET_ROLE_PRESETS,
+} from "@/config/targetRoles";
 import { cn } from "@/lib/utils";
 import { normalizeFontFamily } from "@/utils/fonts";
-import { Edit2, Copy, Trash2 } from "lucide-react";
+import { Edit2, Copy, Trash2, CopyPlus } from "lucide-react";
 
 interface ResumeCardItemProps {
     id: string;
@@ -33,6 +57,14 @@ interface ResumeCardItemProps {
     router: any;
     deleteResume: (resume: any) => void;
     duplicateResume: (resume: any) => void;
+    createResumeVersion: (
+        sourceResumeId: string,
+        options: {
+            versionName: string;
+            targetRole?: string;
+            jobDescription?: string;
+        }
+    ) => string;
     index: number;
 }
 
@@ -45,11 +77,19 @@ export const ResumeCardItem = ({
     router,
     deleteResume,
     duplicateResume,
+    createResumeVersion,
     index,
 }: ResumeCardItemProps) => {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [scale, setScale] = React.useState(0.24);
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+    const [showVersionDialog, setShowVersionDialog] = React.useState(false);
+    const [rolePreset, setRolePreset] = React.useState("qa");
+    const [targetRole, setTargetRole] = React.useState(
+        getTargetRoleValue(TARGET_ROLE_PRESETS[0], locale)
+    );
+    const [versionName, setVersionName] = React.useState("");
+    const [jobDescription, setJobDescription] = React.useState("");
     
     const activeTemplate =
         DEFAULT_TEMPLATES.find((template) => template.id === resume.templateId) ??
@@ -68,6 +108,56 @@ export const ResumeCardItem = ({
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
+
+    React.useEffect(() => {
+        if (!showVersionDialog) return;
+        const nextRole =
+            resume.targetRole ||
+            resume.basic?.title ||
+            getTargetRoleValue(TARGET_ROLE_PRESETS[0], locale);
+        const nextPreset = TARGET_ROLE_PRESETS.find(
+            (preset) => getTargetRoleValue(preset, locale) === nextRole
+        );
+        setTargetRole(
+            nextRole
+        );
+        setRolePreset(nextPreset?.id || "custom");
+        setVersionName("");
+        setJobDescription(resume.jobDescription || "");
+    }, [locale, resume.basic?.title, resume.jobDescription, resume.targetRole, showVersionDialog]);
+
+    const handlePresetChange = (value: string) => {
+        setRolePreset(value);
+        if (value === "custom") return;
+        const preset = TARGET_ROLE_PRESETS.find((item) => item.id === value);
+        if (preset) {
+            setTargetRole(getTargetRoleValue(preset, locale));
+        }
+    };
+
+    const handleCreateVersion = () => {
+        const role = targetRole.trim();
+        const defaultName = role
+            ? t("dashboard.resumes.version.defaultName", { role })
+            : t("dashboard.resumes.version.fallbackName");
+        const newId = createResumeVersion(id, {
+            versionName: versionName.trim() || defaultName,
+            targetRole: role,
+            jobDescription: jobDescription.trim(),
+        });
+
+        if (!newId) {
+            toast.error(t("dashboard.resumes.version.createFailed"));
+            return;
+        }
+
+        setActiveResume(newId);
+        setShowVersionDialog(false);
+        toast.success(t("dashboard.resumes.version.createSuccess"));
+        router.push(`/app/workbench/${newId}`);
+    };
+
+    const versionLabel = resume.versionName || resume.targetRole;
 
     return (
         <motion.div
@@ -117,6 +207,20 @@ export const ResumeCardItem = ({
                     <div className="absolute inset-x-0 bottom-0 top-[60%] pointer-events-none bg-gradient-to-t from-white via-white/90 to-transparent dark:from-gray-950 dark:via-gray-950/90 z-0"></div>
                     <div className="absolute inset-x-0 bottom-0 pt-12 pb-3 px-4 flex justify-between items-end border-t border-transparent z-10 transition-colors group-hover:bg-white/50 dark:group-hover:bg-gray-950/50">
                         <div className="flex flex-col w-full">
+                            {versionLabel && (
+                                <div className="mb-1 flex flex-wrap gap-1">
+                                    {resume.versionName && (
+                                        <Badge variant="secondary" className="max-w-[92%] truncate rounded-md px-1.5 py-0 text-[10px]">
+                                            {resume.versionName}
+                                        </Badge>
+                                    )}
+                                    {resume.targetRole && (
+                                        <Badge variant="outline" className="max-w-[92%] truncate rounded-md px-1.5 py-0 text-[10px] bg-white/70 dark:bg-gray-950/70">
+                                            {resume.targetRole}
+                                        </Badge>
+                                    )}
+                                </div>
+                            )}
                             <span className="text-[15px] font-semibold truncate text-gray-900 dark:text-gray-100 drop-shadow-sm w-[90%]">
                                 {resume.title || t("dashboard.resumes.untitled")}
                             </span>
@@ -134,14 +238,14 @@ export const ResumeCardItem = ({
                     </div>
                 </CardContent>
                 <CardFooter className="p-0 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden">
-                    <div className="flex w-full h-11 divide-x divide-gray-100 dark:divide-gray-800">
+                    <div className="grid w-full h-11 grid-cols-4 divide-x divide-gray-100 dark:divide-gray-800">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveResume(id);
                                 router.push(`/app/workbench/${id}`);
                             }}
-                            className="flex-1 flex items-center justify-center gap-1.5 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-200 text-gray-700 dark:text-gray-200 hover:text-primary font-medium text-sm group"
+                            className="flex items-center justify-center gap-1.5 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-200 text-gray-700 dark:text-gray-200 hover:text-primary font-medium text-xs sm:text-sm group"
                         >
                             <Edit2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform opacity-70 group-hover:opacity-100" />
                             <span>{t("common.edit")}</span>
@@ -152,7 +256,7 @@ export const ResumeCardItem = ({
                                 e.stopPropagation();
                                 duplicateResume(resume);
                             }}
-                            className="flex-1 flex items-center justify-center gap-1.5 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-200 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-sm group"
+                            className="flex items-center justify-center gap-1.5 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-200 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-xs sm:text-sm group"
                         >
                             <Copy className="w-3.5 h-3.5 group-hover:scale-110 transition-transform opacity-70 group-hover:opacity-100" />
                             <span>{t("common.copy")}</span>
@@ -161,9 +265,20 @@ export const ResumeCardItem = ({
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
+                                setShowVersionDialog(true);
+                            }}
+                            className="flex items-center justify-center gap-1.5 hover:bg-white dark:hover:bg-gray-800/80 transition-all duration-200 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-xs sm:text-sm group"
+                        >
+                            <CopyPlus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform opacity-70 group-hover:opacity-100" />
+                            <span>{t("dashboard.resumes.version.shortAction")}</span>
+                        </button>
+
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 setShowDeleteDialog(true);
                             }}
-                            className="flex-1 flex items-center justify-center gap-1.5 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all duration-200 text-red-600 dark:text-red-400 font-medium text-sm group"
+                            className="flex items-center justify-center gap-1.5 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all duration-200 text-red-600 dark:text-red-400 font-medium text-xs sm:text-sm group"
                         >
                             <Trash2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform opacity-80 group-hover:opacity-100" />
                             <span>{t("common.delete")}</span>
@@ -198,6 +313,87 @@ export const ResumeCardItem = ({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={showVersionDialog} onOpenChange={setShowVersionDialog}>
+                <DialogContent onClick={(e) => e.stopPropagation()} className="sm:max-w-[560px]">
+                    <DialogHeader>
+                        <DialogTitle>{t("dashboard.resumes.version.title")}</DialogTitle>
+                        <DialogDescription>
+                            {t("dashboard.resumes.version.description")}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>{t("dashboard.resumes.version.rolePreset")}</Label>
+                            <Select value={rolePreset} onValueChange={handlePresetChange}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {TARGET_ROLE_PRESETS.map((preset) => (
+                                        <SelectItem key={preset.id} value={preset.id}>
+                                            {getTargetRoleLabel(preset, locale)}
+                                        </SelectItem>
+                                    ))}
+                                    <SelectItem value="custom">
+                                        {t("dashboard.resumes.version.customRole")}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor={`version-role-${id}`}>
+                                {t("dashboard.resumes.version.targetRole")}
+                            </Label>
+                            <Input
+                                id={`version-role-${id}`}
+                                value={targetRole}
+                                onChange={(event) => {
+                                    setTargetRole(event.target.value);
+                                    setRolePreset("custom");
+                                }}
+                                placeholder={t("dashboard.resumes.version.targetRolePlaceholder")}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor={`version-name-${id}`}>
+                                {t("dashboard.resumes.version.versionName")}
+                            </Label>
+                            <Input
+                                id={`version-name-${id}`}
+                                value={versionName}
+                                onChange={(event) => setVersionName(event.target.value)}
+                                placeholder={t("dashboard.resumes.version.versionNamePlaceholder")}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor={`version-jd-${id}`}>
+                                {t("dashboard.resumes.version.jobDescription")}
+                            </Label>
+                            <Textarea
+                                id={`version-jd-${id}`}
+                                value={jobDescription}
+                                onChange={(event) => setJobDescription(event.target.value)}
+                                placeholder={t("dashboard.resumes.version.jdPlaceholder")}
+                                rows={5}
+                                className="resize-none"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowVersionDialog(false)}
+                        >
+                            {t("common.cancel")}
+                        </Button>
+                        <Button type="button" onClick={handleCreateVersion}>
+                            {t("dashboard.resumes.version.create")}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </motion.div>
     );
 };

@@ -17,5 +17,18 @@
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/app/**/layout.tsx",
+    "src/app/app/page.tsx",
+    "src/app/api/**/*.ts",
+    "src/app/layout.tsx",
+    "src/app/manifest.ts",
+    "src/app/sitemap.ts",
+    "src/components/Document.tsx",
+    "src/components/shared/UpdateLocale.tsx",
+    "src/i18n/db.ts",
+    "src/i18n/request.ts",
+    "src/middleware.ts"
+  ]
 }

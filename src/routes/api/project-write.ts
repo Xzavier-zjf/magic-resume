@@ -398,6 +398,7 @@ export const Route = createFileRoute("/api/project-write")({
             files,
             currentProject,
             targetRole,
+            jobDescription,
             customInstructions,
             locale,
           } = body as {
@@ -410,6 +411,7 @@ export const Route = createFileRoute("/api/project-write")({
             files?: SourceFile[];
             currentProject?: ProjectDraft;
             targetRole?: string;
+            jobDescription?: string;
             customInstructions?: string;
             locale?: string;
           };
@@ -453,6 +455,9 @@ export const Route = createFileRoute("/api/project-write")({
               : "",
             targetRole?.trim()
               ? `应聘方向/目标岗位：${targetRole.trim()}\n请让项目经历明显服务于该岗位方向，优先保留与该岗位相关的能力证据。`
+              : "",
+            jobDescription?.trim()
+              ? `岗位 JD 上下文：\n${jobDescription.trim()}\n请优先对齐 JD 中的硬技能、工具链、质量要求和岗位职责。`
               : "",
             inferredLink ? `项目链接：${inferredLink}` : "",
             customInstructions?.trim()

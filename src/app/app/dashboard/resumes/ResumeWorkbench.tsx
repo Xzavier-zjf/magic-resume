@@ -18,7 +18,7 @@ import { getConfig, getFileHandle } from "@/utils/fileSystem";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useAIConfigStore } from "@/store/useAIConfigStore";
 import { AI_MODEL_CONFIGS } from "@/config/ai";
-import { DEFAULT_TEMPLATES } from "@/config";
+import { DEFAULT_TEMPLATES } from "@/components/templates/registry";
 import { CreateResumeModal } from "./CreateResumeModal";
 import { ImportResumeDialog } from "./ImportResumeDialog";
 import { ResumeCardItem } from "./ResumeCardItem";
@@ -43,6 +43,7 @@ export const ResumeWorkbench = () => {
         addResume,
         deleteResume,
         createResume,
+        createResumeVersion,
     } = useResumeStore();
     const {
         selectedModel,
@@ -490,6 +491,7 @@ export const ResumeWorkbench = () => {
                                         router={router}
                                         deleteResume={deleteResume}
                                         duplicateResume={duplicateResume}
+                                        createResumeVersion={createResumeVersion}
                                         index={index}
                                     />
                                 ))}

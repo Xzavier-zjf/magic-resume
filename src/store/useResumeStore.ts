@@ -11,8 +11,9 @@ import {
   ResumeData,
   MenuSection,
   Certificate,
+  ResumeAnalysis,
 } from "../types/resume";
-import { DEFAULT_TEMPLATES } from "@/config";
+import { DEFAULT_TEMPLATES } from "@/components/templates/registry";
 import {
   initialResumeState,
   initialResumeStateEn,
@@ -26,6 +27,14 @@ interface ResumeStore {
   activeResume: ResumeData | null;
 
   createResume: (templateId: string | null, isBlank?: boolean) => string;
+  createResumeVersion: (
+    sourceResumeId: string,
+    options: {
+      versionName: string;
+      targetRole?: string;
+      jobDescription?: string;
+    }
+  ) => string;
   deleteResume: (resume: ResumeData) => void;
   duplicateResume: (resumeId: string) => string;
   updateResume: (resumeId: string, data: Partial<ResumeData>) => void;
@@ -34,6 +43,7 @@ interface ResumeStore {
     resume: ResumeData,
     sourceModifiedAt?: number
   ) => boolean;
+  updateResumeAnalysis: (resumeId: string, analysis: ResumeAnalysis) => void;
 
   updateResumeTitle: (title: string) => void;
   updateBasicInfo: (data: Partial<BasicInfo>) => void;
@@ -200,8 +210,8 @@ const debouncedSyncToFile = (
   }, 1500);
 };
 
-export const useResumeStore = create(
-  persist<ResumeStore>(
+export const useResumeStore = create<ResumeStore>()(
+  persist<ResumeStore, [], [], PersistedResumeStore>(
     (set, get) => ({
       resumes: {},
       activeResumeId: null,
@@ -256,6 +266,42 @@ export const useResumeStore = create(
         return id;
       },
 
+      createResumeVersion: (sourceResumeId, options) => {
+        const sourceResume = get().resumes[sourceResumeId];
+        if (!sourceResume) return "";
+
+        const newId = generateUUID();
+        const now = new Date().toISOString();
+        const versionName = options.versionName.trim();
+        const duplicatedResume: ResumeData = {
+          ...structuredClone(sourceResume),
+          id: newId,
+          title: versionName
+            ? `${sourceResume.title} - ${versionName}`
+            : `${sourceResume.title} - 岗位版本`,
+          versionName: versionName || undefined,
+          targetRole: options.targetRole?.trim() || sourceResume.targetRole,
+          jobDescription:
+            options.jobDescription?.trim() || sourceResume.jobDescription,
+          sourceResumeId,
+          analysisHistory: [],
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        set((state) => ({
+          resumes: {
+            ...state.resumes,
+            [newId]: duplicatedResume,
+          },
+          activeResumeId: newId,
+          activeResume: duplicatedResume,
+        }));
+
+        syncResumeToFile(duplicatedResume);
+        return newId;
+      },
+
       updateResume: (resumeId, data) => {
         set((state) => {
           const resume = state.resumes[resumeId];
@@ -303,6 +349,21 @@ export const useResumeStore = create(
         }));
 
         return true;
+      },
+
+      updateResumeAnalysis: (resumeId, analysis) => {
+        const resume = get().resumes[resumeId];
+        if (!resume) return;
+
+        const history = [
+          analysis,
+          ...(resume.analysisHistory || []).filter((item) => item.id !== analysis.id),
+        ].slice(0, 10);
+        get().updateResume(resumeId, {
+          analysisHistory: history,
+          targetRole: analysis.targetRole || resume.targetRole,
+          jobDescription: analysis.jobDescription || resume.jobDescription,
+        });
       },
 
       updateResumeTitle: (title) => {

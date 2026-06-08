@@ -83,3 +83,32 @@ export const IconAI: React.FC<IconProps> = ({ size = 24, className, active }) =>
     <rect x="5" y="28" width="8" height="8" rx="2" fill="#FA8C16" transform="rotate(25 9 32)" />
   </svg>
 );
+
+// Analyze: Target score board
+export const IconAnalyze: React.FC<IconProps> = ({ size = 24, className, active }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="4" y="4" width="32" height="32" rx="6" fill="#13C2C2" />
+    <circle cx="20" cy="20" r="10" fill="white" fillOpacity="0.9" />
+    <circle cx="20" cy="20" r="6" fill="#13C2C2" fillOpacity="0.85" />
+    <circle cx="20" cy="20" r="2.5" fill="white" />
+    <path d="M20 8V4M20 36V32M8 20H4M36 20H32" stroke="white" strokeWidth="3" strokeLinecap="round" />
+    {active && (
+      <circle cx="32" cy="32" r="5" fill="#FF4D4F" stroke="white" strokeWidth="2" />
+    )}
+  </svg>
+);
+
+// Applications: Job pipeline board
+export const IconApplications: React.FC<IconProps> = ({ size = 24, className, active }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="4" y="7" width="32" height="27" rx="6" fill="#2F54EB" />
+    <path d="M14 7V6C14 4.89543 14.8954 4 16 4H24C25.1046 4 26 4.89543 26 6V7" stroke="#2F54EB" strokeWidth="3" strokeLinecap="round" />
+    <rect x="10" y="14" width="20" height="3" rx="1.5" fill="white" />
+    <rect x="10" y="21" width="13" height="3" rx="1.5" fill="white" fillOpacity="0.8" />
+    <rect x="10" y="28" width="17" height="3" rx="1.5" fill="white" fillOpacity="0.8" />
+    <circle cx="30" cy="24" r="5" fill="#52C41A" stroke="white" strokeWidth="2" />
+    {active && (
+      <circle cx="32" cy="32" r="5" fill="#FF4D4F" stroke="white" strokeWidth="2" />
+    )}
+  </svg>
+);

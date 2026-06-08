@@ -120,6 +120,72 @@ export interface Project {
   linkVisible?: boolean;
 }
 
+export interface KeywordMatch {
+  keyword: string;
+  matched: boolean;
+  category: "skill" | "role" | "tool" | "quality" | "general";
+}
+
+export interface ResumeRewriteSuggestion {
+  section: "basic" | "skills" | "experience" | "projects" | "selfEvaluation";
+  title: string;
+  before?: string;
+  after: string;
+}
+
+export interface ResumeAnalysis {
+  id: string;
+  resumeId?: string;
+  targetRole: string;
+  jobDescription: string;
+  createdAt: string;
+  overallScore: number;
+  keywordScore: number;
+  skillScore: number;
+  projectScore: number;
+  atsScore: number;
+  keywords: KeywordMatch[];
+  missingKeywords: string[];
+  strengths: string[];
+  risks: string[];
+  suggestions: string[];
+  rewrites: ResumeRewriteSuggestion[];
+  summary?: string;
+  aiEnhanced?: boolean;
+  aiError?: string;
+}
+
+export type ApplicationStatus =
+  | "pending"
+  | "applied"
+  | "written"
+  | "interview"
+  | "offer"
+  | "rejected"
+  | "archived";
+
+export interface ApplicationRecord {
+  id: string;
+  company: string;
+  position: string;
+  jobDescription: string;
+  status: ApplicationStatus;
+  resumeId?: string;
+  appliedAt?: string;
+  interviewAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TargetRolePreset {
+  id: string;
+  labelZh: string;
+  labelEn: string;
+  valueZh: string;
+  valueEn: string;
+}
+
 export interface Certificate {
   id: string;
   url: string; // Base64 encoding for the image or direct URL
@@ -184,6 +250,11 @@ export interface MenuSection {
 export interface ResumeData {
   id: string;
   title: string;
+  versionName?: string;
+  targetRole?: string;
+  sourceResumeId?: string;
+  jobDescription?: string;
+  analysisHistory?: ResumeAnalysis[];
   createdAt: string;
   updatedAt: string;
   templateId: string | null | undefined;
@@ -206,7 +277,16 @@ export interface ResumeStore {
   currentResumeId: string | null;
   currentResume: ResumeData | null;
   addResume: (resume: Omit<ResumeData, "id">) => void;
+  createResumeVersion: (
+    sourceResumeId: string,
+    options: {
+      versionName: string;
+      targetRole?: string;
+      jobDescription?: string;
+    }
+  ) => string;
   updateResume: (id: string, data: Partial<ResumeData>) => void;
+  updateResumeAnalysis: (resumeId: string, analysis: ResumeAnalysis) => void;
   deleteResume: (id: string) => void;
   setCurrentResume: (id: string) => void;
   updateBasicInfo: (info: Partial<ResumeData["basic"]>) => void;
