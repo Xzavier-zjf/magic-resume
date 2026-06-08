@@ -80,6 +80,19 @@ const getColors = (t: any): ColorOption[] => [
 
 const getBgColors = getColors;
 
+const ToolbarTooltip = ({ children }: { children: React.ReactNode }) => (
+  <div
+    className={cn(
+      "absolute -bottom-8 left-1/2 transform -translate-x-1/2",
+      "px-2 py-1 text-xs rounded-md whitespace-nowrap z-50",
+      "transition-opacity duration-200",
+      "bg-secondary text-secondary-foreground dark:bg-neutral-800 dark:text-neutral-200"
+    )}
+  >
+    {children}
+  </div>
+);
+
 interface MenuButtonProps {
   onClick: () => void;
   isActive?: boolean;
@@ -127,16 +140,53 @@ const MenuButton = ({
         {children}
       </Button>
       {tooltip && showTooltip && (
-        <div
+        <ToolbarTooltip>{tooltip}</ToolbarTooltip>
+      )}
+    </div>
+  );
+};
+
+interface PopoverMenuButtonProps {
+  tooltip: string;
+  isActive?: boolean;
+  isOpen?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const PopoverMenuButton = ({
+  tooltip,
+  isActive = false,
+  isOpen = false,
+  children,
+  className,
+}: PopoverMenuButtonProps) => {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <PopoverTrigger asChild>
+        <Button
+          variant={isActive ? "secondary" : "ghost"}
+          size="sm"
           className={cn(
-            "absolute -bottom-8 left-1/2 transform -translate-x-1/2",
-            "px-2 py-1 text-xs rounded-md whitespace-nowrap z-50",
-            "transition-opacity duration-200",
-            "bg-secondary text-secondary-foreground dark:bg-neutral-800 dark:text-neutral-200"
+            "h-9 w-9 p-0 rounded-md transition-all duration-200 hover:scale-105 relative group",
+            isActive
+              ? "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+              : "hover:bg-primary/5 dark:hover:bg-neutral-800",
+            className
           )}
+          onMouseDown={(e) => e.preventDefault()}
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+          onFocus={() => setShowTooltip(true)}
+          onBlur={() => setShowTooltip(false)}
         >
-          {tooltip}
-        </div>
+          {children}
+        </Button>
+      </PopoverTrigger>
+      {tooltip && showTooltip && !isOpen && (
+        <ToolbarTooltip>{tooltip}</ToolbarTooltip>
       )}
     </div>
   );
@@ -144,6 +194,7 @@ const MenuButton = ({
 
 const TextColorButton = ({ editor }: { editor: Editor }) => {
   const [activeColor, setActiveColor] = React.useState<string | null>(null);
+  const [open, setOpen] = React.useState(false);
   const t = useTranslations("richEditor");
   const colors = getColors(t);
 
@@ -164,13 +215,8 @@ const TextColorButton = ({ editor }: { editor: Editor }) => {
   }, [editor]);
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 w-9 p-0 rounded-md hover:scale-105 transition-all duration-200 hover:bg-primary/5 relative group"
-        >
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverMenuButton tooltip={t("textColor")} isOpen={open}>
           <PaintBucket
             className="h-5 w-5"
             style={{
@@ -181,8 +227,7 @@ const TextColorButton = ({ editor }: { editor: Editor }) => {
             }}
           />
           <span className="sr-only">{t("textColor")}</span>
-        </Button>
-      </PopoverTrigger>
+      </PopoverMenuButton>
       <PopoverContent className="w-64 p-3 rounded-lg">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -231,6 +276,7 @@ const TextColorButton = ({ editor }: { editor: Editor }) => {
 
 const BackgroundColorButton = ({ editor }: { editor: Editor }) => {
   const [activeBgColor, setActiveBgColor] = React.useState<string | null>(null);
+  const [open, setOpen] = React.useState(false);
   const t = useTranslations("richEditor");
   const bgColors = getBgColors(t);
 
@@ -257,13 +303,8 @@ const BackgroundColorButton = ({ editor }: { editor: Editor }) => {
   }, [editor]);
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 w-9 p-0 rounded-md hover:scale-105 transition-all duration-200 hover:bg-primary/5 relative group"
-        >
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverMenuButton tooltip={t("backgroundColor")} isOpen={open}>
           <div className="relative">
             <Highlighter
               className="h-5 w-5"
@@ -282,8 +323,7 @@ const BackgroundColorButton = ({ editor }: { editor: Editor }) => {
             )}
           </div>
           <span className="sr-only">{t("backgroundColor")}</span>
-        </Button>
-      </PopoverTrigger>
+      </PopoverMenuButton>
       <PopoverContent className="w-64 p-3 rounded-lg">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -374,22 +414,14 @@ const LinkButton = ({ editor }: { editor: Editor }) => {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant={editor.isActive("link") ? "secondary" : "ghost"}
-          size="sm"
-          className={cn(
-            "h-9 w-9 p-0 rounded-md transition-all duration-200 hover:scale-105",
-            editor.isActive("link")
-              ? "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-              : "hover:bg-primary/5 dark:hover:bg-neutral-800"
-          )}
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          <Link2 className="h-5 w-5" />
-          <span className="sr-only">{t("link")}</span>
-        </Button>
-      </PopoverTrigger>
+      <PopoverMenuButton
+        tooltip={t("link")}
+        isActive={editor.isActive("link")}
+        isOpen={open}
+      >
+        <Link2 className="h-5 w-5" />
+        <span className="sr-only">{t("link")}</span>
+      </PopoverMenuButton>
       <PopoverContent className="w-72 p-3 rounded-lg" align="start">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">

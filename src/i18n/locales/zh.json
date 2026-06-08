@@ -283,6 +283,7 @@
     "toast": {
       "success": "PDF导出成功",
       "error": "PDF导出失败",
+      "fallbackToPrint": "PDF 本地导出失败，已切换到浏览器打印导出。请选择“保存为 PDF”。",
       "jsonSuccess": "配置导出成功",
       "jsonError": "配置导出失败",
       "markdownSuccess": "Markdown 导出成功",
@@ -392,6 +393,15 @@
         "hide": "隐藏"
       }
     },
+    "skillPanel": {
+      "placeholder": "描述你的技能、专长等...",
+      "layout": {
+        "title": "显示方式",
+        "description": "技能较多时可切换为双栏，减少简历向下拉长。",
+        "single": "单栏",
+        "columns": "双栏"
+      }
+    },
     "experiencePanel": {
       "title": "工作经历",
       "addButton": "添加工作经历",
@@ -458,7 +468,8 @@
         "date": "项目时间",
         "description": "项目描述",
         "link": "项目链接",
-        "linkLabel": "显示文字"
+        "linkLabel": "显示文字",
+        "linkVisible": "显示项目链接"
       },
       "placeholders": {
         "name": "请输入项目名称",

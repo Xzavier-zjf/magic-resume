@@ -417,6 +417,7 @@ export default function AIProjectWriterDialog({
           : project.description,
       link: generatedProject.link || project.link,
       linkLabel: generatedProject.linkLabel || project.linkLabel,
+      linkVisible: generatedProject.link ? true : project.linkVisible,
     });
     toast.success(t("toast.applied"));
     onOpenChange(false);

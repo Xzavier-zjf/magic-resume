@@ -14,6 +14,7 @@ import ThemeModal from "@/components/shared/ThemeModal";
 import { useTranslations } from "@/i18n/compat/client";
 import { Project } from "@/types/resume";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import AIProjectWriterDialog from "./AIProjectWriterDialog";
 
 interface ProjectEditorProps {
@@ -26,6 +27,7 @@ interface ProjectEditorProps {
 const ProjectEditor: React.FC<ProjectEditorProps> = ({ project, onSave }) => {
   const t = useTranslations("workbench.projectItem");
   const [aiWriterOpen, setAiWriterOpen] = useState(false);
+  const hasProjectLink = Boolean(project.link?.trim());
   const handleChange = (field: keyof Project, value: string) => {
     onSave({
       ...project,
@@ -67,6 +69,20 @@ const ProjectEditor: React.FC<ProjectEditorProps> = ({ project, onSave }) => {
             <span className="text-sm text-foreground">{t("labels.link")}</span>
           </div>
           <div className="rounded-lg border border-input bg-background/40 p-3">
+            {hasProjectLink && (
+              <div className="mb-3 flex items-center justify-between gap-3 rounded-md bg-muted/30 px-3 py-2">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t("labels.linkVisible")}
+                </span>
+                <Switch
+                  checked={project.linkVisible !== false}
+                  onCheckedChange={(checked) =>
+                    onSave({ ...project, linkVisible: checked })
+                  }
+                  aria-label={t("labels.linkVisible")}
+                />
+              </div>
+            )}
             <div className="grid gap-3 md:grid-cols-2">
               <label className="block space-y-1.5">
                 <span className="text-xs text-muted-foreground">

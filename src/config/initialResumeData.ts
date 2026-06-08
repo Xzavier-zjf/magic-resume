@@ -11,6 +11,7 @@ const initialGlobalSettings: GlobalSettings = {
   useIconMode: true,
   themeColor: "#000000",
   centerSubtitle: true,
+  skillLayout: "single",
 };
 
 export const initialResumeState = {

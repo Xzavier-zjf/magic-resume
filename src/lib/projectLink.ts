@@ -43,9 +43,11 @@ export const getProjectLinkLabel = (
 };
 
 export const getProjectLinkMeta = (
-  project: Pick<Project, "link" | "linkLabel">,
+  project: Pick<Project, "link" | "linkLabel" | "linkVisible">,
   options?: { preferFullUrl?: boolean }
 ) => {
+  if (project.linkVisible === false) return null;
+
   const href = getProjectLinkHref(project.link);
   if (!href) return null;
 

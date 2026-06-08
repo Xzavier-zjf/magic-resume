@@ -282,6 +282,7 @@
     "toast": {
       "success": "PDF exported successfully",
       "error": "PDF export failed",
+      "fallbackToPrint": "Local PDF export failed. Browser print export has been opened instead. Choose \"Save as PDF\".",
       "jsonSuccess": "Configuration exported successfully",
       "jsonError": "Configuration export failed",
       "markdownSuccess": "Markdown exported successfully",
@@ -435,6 +436,15 @@
       },
       "githubContributions": "GitHub Contributions"
     },
+    "skillPanel": {
+      "placeholder": "Describe your skills, strengths, and specialties...",
+      "layout": {
+        "title": "Display",
+        "description": "Use two columns when the skill list is long.",
+        "single": "Single",
+        "columns": "Columns"
+      }
+    },
     "experiencePanel": {
       "title": "Work Experience",
       "addButton": "Add Work Experience",
@@ -500,7 +510,8 @@
         "description": "Project Description",
         "technologies": "Tech Stack",
         "link": "Project Link",
-        "linkLabel": "Display Text"
+        "linkLabel": "Display Text",
+        "linkVisible": "Show project link"
       },
       "placeholders": {
         "name": "Enter project name",

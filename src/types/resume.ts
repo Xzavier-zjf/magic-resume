@@ -117,6 +117,7 @@ export interface Project {
   visible: boolean;
   link?: string;
   linkLabel?: string;
+  linkVisible?: boolean;
 }
 
 export interface Certificate {
@@ -139,6 +140,7 @@ export type GlobalSettings = {
   centerSubtitle?: boolean | undefined;
   flexibleHeaderLayout?: boolean | undefined;
   autoOnePage?: boolean | undefined;
+  skillLayout?: "single" | "columns" | undefined;
 };
 
 export interface ResumeTheme {

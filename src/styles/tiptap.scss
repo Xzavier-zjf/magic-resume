@@ -208,6 +208,18 @@
   margin: 0;
 }
 
+#resume-preview .resume-skill-content[data-skill-layout="columns"],
+.resume-preview .resume-skill-content[data-skill-layout="columns"] {
+  column-count: 2;
+  column-gap: 2.5rem;
+}
+
+#resume-preview .resume-skill-content[data-skill-layout="columns"] li,
+.resume-preview .resume-skill-content[data-skill-layout="columns"] li {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
 #resume-preview ul ul,
 #resume-preview ul ol,
 #resume-preview ol ul,

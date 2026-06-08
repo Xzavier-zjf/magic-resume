@@ -99,7 +99,8 @@ const PdfExport = ({ children }: { children?: React.ReactNode }) => {
       onStart: () => setIsExporting(true),
       onEnd: () => setIsExporting(false),
       successMessage: t("toast.success"),
-      errorMessage: t("toast.error")
+      errorMessage: t("toast.error"),
+      fallbackMessage: t("toast.fallbackToPrint")
     });
   };
 
